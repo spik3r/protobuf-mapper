@@ -1,16 +1,28 @@
-package com.kaitait;
+package infrastructure.persistence.grpc;
+
+import com.kaitait.Bar;
+import com.kaitait.DummyBar;
+import com.zencontrol.sites.generated.ControllerIdRequestMessage;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.function.Predicate;
+
+import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
 
 public class ProtoMapper
 {
     private static HashMap hmap;
+    private static HashMap<String, Object> fieldValues = new HashMap<String, Object>();
     
     public static void main(String[] args) throws Exception {
         System.out.println("_____createClass______");
@@ -24,26 +36,55 @@ public class ProtoMapper
         
         System.out.println("_____after createClass______");
     }
-
     
-    private static HashMap<String, Object> getMemberFields(Object obj) throws IllegalAccessException,
-            NoSuchFieldException
+    
+    //    private static HashMap<String, Object> getMemberFields(Object obj) throws IllegalAccessException,
+    private static Object getMemberFields(Object obj) throws IllegalAccessException,
+            NoSuchFieldException, InvocationTargetException, NoSuchMethodException
     {
-         HashMap<String, Object> fieldValues = new HashMap<String, Object>();
-                Class<?> objClass = obj.getClass();
+//         HashMap<String, Object> fieldValues = new HashMap<String, Object>();
+        Class<?> objClass = obj.getClass();
         
         Field[] fields = objClass.getDeclaredFields();
         for(Field field : fields)
         {
             field.setAccessible(true);
             fieldValues.put(field.getName(), field.get(obj));
-            // Todo: use the commons class to check if it is primitive or an object
-            if (!field.getType().isPrimitive() && !field.getType().getName().contains("java.lang"))
+            if (!isPrimitiveOrWrapper(field.getType()))
             {
                 getMemberFields(field.get(obj));
             }
+            else {
+                return setValue(obj, field);
+            }
         }
-        return fieldValues;
+        //return fieldValues;
+        return null;
+    }
+    
+    public static Object setValue(Object object, Field field)
+            throws InvocationTargetException, IllegalAccessException, NoSuchMethodException
+    {
+        
+        Class clazz = object.getClass();
+        Method builderMethod = clazz.getDeclaredMethod("newBuilder");
+        Object builderInstance = builderMethod.invoke(null);
+        
+        String variable = field.getName();
+        String setter = getSetterFor(variable);
+        Method method = ProtoMapper.<Method>arraySearch(
+                builderInstance.getClass().getDeclaredMethods(),
+                new MethodNameMatchesPredicate(setter));
+        
+        return method.invoke(builderInstance, field.get(object));
+    }
+    
+    public static String getSetterFor(String variableName){
+        return "set" + capitalizeFirstLetter(variableName);
+    }
+    
+    public static String capitalizeFirstLetter(String variableName){
+        return variableName.substring(0, 1).toUpperCase() + variableName.substring(1);
     }
     
     public static Object createClass(Class clazz, Object objectToMapFrom) throws
@@ -68,12 +109,49 @@ public class ProtoMapper
         Class[] classes = (constructorArgs.toArray(new Class[variables.size()]));
         Object[] values = constructorValues.toArray();
         
-        Constructor constructor = clazz.getConstructor(classes);
-        constructor.setAccessible(true);
-        Object someClass = constructor.newInstance(values);
-        setMemberFields(someClass);
-
-        return someClass;
+        
+        Class noparams[] = {};
+        Method method = clazz.getDeclaredMethod("newBuilder");
+        Object builderInstance = method.invoke(null);
+        
+        
+        
+        Method method1 = null;
+        Method method2 = null;
+        Method method3 = null;
+        
+        Method m = ProtoMapper.<Method>arraySearch(
+                builderInstance.getClass().getDeclaredMethods(),
+                new MethodNameMatchesPredicate("setLabel")
+        );
+        
+        
+        method1.invoke(builderInstance, "test");
+        ControllerIdRequestMessage idRequestMessage = ControllerIdRequestMessage
+                .newBuilder()
+                .setSerial
+                        ("SDFGHJK")
+                .setGtin(1234L)
+                .build();
+        method2.invoke(builderInstance, idRequestMessage);
+        
+        
+        
+        return method3.invoke(builderInstance, null);
+    }
+    
+    
+    private static <T> T arraySearch(T[] array, Predicate<T> predicate)
+    {
+        for (T value : array)
+        {
+            if (predicate.test(value))
+            {
+                return value;
+            }
+        }
+        
+        return null;
     }
     
     private static void setMemberFields(Object obj) throws IllegalAccessException
@@ -84,8 +162,24 @@ public class ProtoMapper
         {
             field.setAccessible(true);
             Object fieldValue = hmap.get(field.getName());
-
+            
             field.set(obj, fieldValue);
         }
+    }
+}
+
+class MethodNameMatchesPredicate implements Predicate<Method>
+{
+    private final String value;
+    
+    MethodNameMatchesPredicate(String value)
+    {
+        this.value = value;
+    }
+    
+    @Override
+    public boolean test(Method method)
+    {
+        return this.value.equals(method.getName());
     }
 }

@@ -1,3 +1,5 @@
+package com.kaitait;
+
 public class Bar {
     private Double someDouble = 123.456;
     private String innerString = "another String";

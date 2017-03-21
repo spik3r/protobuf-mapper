@@ -1,3 +1,5 @@
+package com.kaitait;
+
 public class Foo {
     
     public Foo(){}

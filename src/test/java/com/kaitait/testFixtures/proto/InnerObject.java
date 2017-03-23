@@ -1,19 +1,28 @@
-package com.kaitait.testClasses.proto;
+package com.kaitait.testFixtures.proto;
 
 /**
  * Created by kai-tait on 22/03/2017.
  */
-public class ControllerIdRequestMessage {
-    private long gtin_;
+public class InnerObject
+{
+    private long objectId_;
     private String serial_;
     
     
-    private ControllerIdRequestMessage(){}
+    private InnerObject(){}
 
     
-    private ControllerIdRequestMessage(Builder builder) {
-        this.gtin_ = builder.gtin_;
+    private InnerObject(Builder builder) {
+        this.objectId_ = builder.objectId_;
         this.serial_ = builder.serial_;
+    }
+    
+    public long getObjectId() {
+        return this.objectId_;
+    }
+    
+    public String getSerial() {
+        return this.serial_;
     }
     
     public static Builder newBuilder() {
@@ -21,15 +30,15 @@ public class ControllerIdRequestMessage {
     }
     
     public static final class Builder {
-        private long gtin_;
+        private long objectId_;
         private String serial_;
         
         public Builder() {
             return;
         }
         
-        public Builder setGtin(long value) {
-            gtin_ = value;
+        public Builder setObjectId(long value) {
+            objectId_ = value;
             return this;
         }
     
@@ -38,8 +47,8 @@ public class ControllerIdRequestMessage {
             return this;
         }
         
-        public ControllerIdRequestMessage build() {
-            return new ControllerIdRequestMessage(this);
+        public InnerObject build() {
+            return new InnerObject(this);
         }
     }
 }

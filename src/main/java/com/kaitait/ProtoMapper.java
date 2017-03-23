@@ -3,23 +3,24 @@ package com.kaitait;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.function.Predicate;
 import com.kaitait.matchers.*;
 
+import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
 
-
-public class ProtoMapper
-{
+public class ProtoMapper {
+    /**
+     * Creates a protobuf object by using the builder created by: createProtoMessageBuilder
+     * @param clazz the class of the object returned
+     * @param domainObject the object to convert
+     * @return
+     * @throws NoSuchMethodException
+     * @throws InvocationTargetException
+     * @throws IllegalAccessException
+     */
     public static Object createProtoMessageObject(Class clazz, Object domainObject)
-            throws
-            NoSuchMethodException,
-            InvocationTargetException,
-            IllegalAccessException,
-            ClassNotFoundException,
-            NoSuchFieldException,
-            InstantiationException
-    {
+            throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        
         Object builderInstance = createProtoMessageBuilder(clazz, domainObject);
         Method buildMethod = ProtoMapper.arraySearch(
                 builderInstance.getClass().getDeclaredMethods(),
@@ -27,92 +28,107 @@ public class ProtoMapper
         return buildMethod.invoke(builderInstance,null);
     }
     
-    public static Object createProtoMessageBuilder(Class clazz, Object domainObject) throws
-            IllegalAccessException,
-            InstantiationException,
-            NoSuchMethodException,
-            InvocationTargetException,
-            NoSuchFieldException, ClassNotFoundException
-    {
-        //Make builder for main proto message
-        Method builderMethod = clazz.getDeclaredMethod("newBuilder");
-        Object builderInstance = builderMethod.invoke(null);
+    /**
+     * Creates a protobuf object builder based on the class passed in with all the variables
+     * of the domainObject. It should also work for non protobuf generated classes as long as they
+     * have a builder and follow the same naming convention.
+     *
+     * eg. if the domainObject has a variable: long objectId the proto class should have
+     * long objectId_ as well as a builder with: newBuilder() and setObjectId(long value) methods.
+     * See `package com.kaitait.testFixtures.proto` for an example.
+     *
+     * @param clazz the class of the object builder returned
+     * @param domainObject the object to convert
+     * @return
+     * @throws IllegalAccessException
+     * @throws NoSuchMethodException
+     * @throws InvocationTargetException
+     */
+    public static Object createProtoMessageBuilder(Class clazz, Object domainObject)
+            throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         
-        Class<?> objClass = domainObject.getClass();
-        Field[] domainObjectFields = objClass.getDeclaredFields();
-        for(Field field : domainObjectFields)
-        {
-            field.setAccessible(true);
-            //fieldValues.put(field.getName(), field.get(domainObject));
-            if (!field.getType().getClass().getName().contains("java.lang"))
-            {
-//                iterateOverMemberFields(field.get(domainObject));
-                
-                
-                Field innerField = ProtoMapper.arraySearch(
-                        clazz.getDeclaredFields(),
-                        new FieldNameMatchesPredicate(field.getName() + "_")
-                );
-                
-                
-                Object nestedMessage = createProtoMessageBuilder(
-                        innerField.getType(),
-                        field.get(domainObject)
-                );
-                String variable = field.getName();
-                String setter = getSetterFor(variable);
-                Method method = ProtoMapper.arraySearch(
-                        builderInstance.getClass().getDeclaredMethods(),
-                        new MethodNameMatchesPredicate(setter)
-                );
-                
-                Class<?>[] a = method.getParameterTypes();
-                Class b = nestedMessage.getClass();
-                
-                method.invoke(builderInstance, nestedMessage);
-            }
-            else {
-                
-                String variable = field.getName();
-                String setter = getSetterFor(variable);
-                Method method = ProtoMapper.arraySearch(
-                        builderInstance.getClass().getDeclaredMethods(),
-                        new MethodNameMatchesPredicate(setter));
-                System.out.println("method: " + method.getName());
-                System.out.println("param type: " + Arrays.toString(method.getParameterTypes()));
-                System.out.println("params: " + Arrays.toString(method.getParameters()));
-                System.out.println("field.get(domainObject): " + field.get(domainObject));
-                System.out.println("field.get(domainObject).getClass(): " + field.get(domainObject).getClass());
-                method.invoke(builderInstance, field.get(domainObject));
-            }
-        }
-        Method buildMethod = ProtoMapper.arraySearch(
+        final Method builderMethod = clazz.getDeclaredMethod("newBuilder");
+        final Object builderInstance = builderMethod.invoke(null);
+        final Class<?> objClass = domainObject.getClass();
+        final Field[] domainObjectFields = objClass.getDeclaredFields();
+        
+        iterateOverFields(clazz, domainObject, builderInstance, domainObjectFields);
+    
+        ProtoMapper.arraySearch(
                 builderInstance.getClass().getDeclaredMethods(),
                 new MethodNameMatchesPredicate("build"));
         
-        //return buildMethod.invoke(builderInstance,null);
         return builderInstance;
     }
     
+    private static void iterateOverFields(
+            Class clazz,
+            Object domainObject,
+            Object builderInstance,
+            Field[] domainObjectFields)
+            throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+        for(Field field : domainObjectFields) {
+            field.setAccessible(true);
+            if (isPrimitiveOrWrapper(field.getType()) || field.getType().equals(String.class)) {
+                final String variable = field.getName();
+                final String setter = getSetterFor(variable);
+                final Method method = ProtoMapper.arraySearch(
+                        builderInstance.getClass().getDeclaredMethods(),
+                        new MethodNameMatchesPredicate(setter));
+                method.invoke(builderInstance, field.get(domainObject));
+                continue;
+            }
+            
+            final Field innerField = ProtoMapper.arraySearch(
+                    clazz.getDeclaredFields(),
+                    new FieldNameMatchesPredicate(field.getName() + "_"));
     
-    private static <T> T arraySearch(T[] array, Predicate<T> predicate)
-    {
-        for (T value : array)
-        {
-            if (predicate.test(value))
-            {
+    
+            final Object nestedMessage = createProtoMessageBuilder(
+                    innerField.getType(),
+                    field.get(domainObject));
+            final String variable = field.getName();
+            final String setter = getSetterFor(variable);
+            final Method method = ProtoMapper.arraySearch(
+                    builderInstance.getClass().getDeclaredMethods(),
+                    new MethodNameMatchesPredicate(setter));
+    
+            method.invoke(builderInstance, nestedMessage);
+        }
+    }
+    
+    /**
+     * Helper method to search an array and return the value if it's found.
+     * @param array
+     * @param predicate
+     * @param <T>
+     * @return
+     */
+    private static <T> T arraySearch(final T[] array, final Predicate<T> predicate) {
+        for (T value : array) {
+            if (predicate.test(value)) {
                 return value;
             }
         }
-        
         return null;
     }
     
-    public static String getSetterFor(String variableName){
+    /**
+     * Creates a camel case setter for the variable passed in.
+     * eg. if the variable is objectId the setter returned will be setObjectId
+     * @param variableName
+     * @return
+     */
+    private static String getSetterFor(final String variableName){
         return "set" + capitalizeFirstLetter(variableName);
     }
     
-    public static String capitalizeFirstLetter(String variableName){
+    /**
+     * Returns the String passed in with the first letter capitalised.
+     * @param variableName
+     * @return
+     */
+    private static String capitalizeFirstLetter(final String variableName){
         return variableName.substring(0, 1).toUpperCase() + variableName.substring(1);
     }
 }

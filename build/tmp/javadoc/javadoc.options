@@ -1,0 +1,8 @@
+-classpath 'C:\\Users\\kai-tait\\Desktop\\protoMapper\\build\\classes\\main;C:\\Users\\kai-tait\\Desktop\\protoMapper\\build\\resources\\main;C:\\Users\\kai-tait\\.gradle\\caches\\modules-2\\files-2.1\\com.google.protobuf\\protobuf-java\\3.0.0-beta-1\\ac43bb808c3d6c735d0d4b4ce3c91d414ee0c7d8\\protobuf-java-3.0.0-beta-1.jar;C:\\Users\\kai-tait\\.gradle\\caches\\modules-2\\files-2.1\\org.apache.commons\\commons-lang3\\3.5\\6c6c702c89bfff3cd9e80b04d668c5e190d588c6\\commons-lang3-3.5.jar'
+-d 'C:\\Users\\kai-tait\\Desktop\\protoMapper\\build\\docs\\javadoc'
+-doctitle 'protoMapper 0.0.2 API'
+-quiet 
+-windowtitle 'protoMapper 0.0.2 API'
+'C:\\Users\\kai-tait\\Desktop\\protoMapper\\src\\main\\java\\com\\kaitait\\matchers\\FieldNameMatchesPredicate.java'
+'C:\\Users\\kai-tait\\Desktop\\protoMapper\\src\\main\\java\\com\\kaitait\\matchers\\MethodNameMatchesPredicate.java'
+'C:\\Users\\kai-tait\\Desktop\\protoMapper\\src\\main\\java\\com\\kaitait\\ProtoMapper.java'

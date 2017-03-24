@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.kaitait.ProtoMapperTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2017-03-24T00:35:42" hostname="DESKTOP-0010" time="0.015">
+  <properties/>
+  <testcase name="pojoToProto_inCompatiblePojo_throwsNPE" classname="com.kaitait.ProtoMapperTest" time="0.009"/>
+  <testcase name="pojoToProto_validPojo_ProtoSuccessfullCreated" classname="com.kaitait.ProtoMapperTest" time="0.005"/>
+  <testcase name="createProtoMessageObject_validPojo_ProtoSuccessfullCreated" classname="com.kaitait.ProtoMapperTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

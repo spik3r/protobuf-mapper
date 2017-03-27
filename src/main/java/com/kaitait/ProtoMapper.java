@@ -8,6 +8,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.function.Predicate;
 
+import static com.kaitait.StringHelpers.getSetterFor;
 import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
 
 public class ProtoMapper {
@@ -21,7 +22,7 @@ public class ProtoMapper {
      * @throws InvocationTargetException
      * @throws IllegalAccessException
      */
-    public static Object createProtoMessageObject(Class clazz, Object domainObject)
+    public static Object createProto(Class clazz, Object domainObject)
             throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
 
         Object builderInstance = createProtoMessageBuilder(clazz, domainObject);
@@ -87,7 +88,7 @@ public class ProtoMapper {
                 clazz.getDeclaredFields(),
                 new FieldNameMatchesPredicate(field.getName() + "_"));
 
-        final Object nestedMessage = createProtoMessageObject(
+        final Object nestedMessage = createProto(
                 innerField.getType(),
                 field.get(domainObject));
 
@@ -141,26 +142,7 @@ public class ProtoMapper {
         return null;
     }
 
-    /**
-     * Creates a camel case setter for the variable passed in.
-     * eg. if the variable is objectId the setter returned will be setObjectId
-     *
-     * @param variableName
-     * @return a String setter name in camel case
-     */
-    private static String getSetterFor(final String variableName) {
-        return "set" + capitalizeFirstLetter(variableName);
-    }
 
-    /**
-     * Returns the String passed in with the first letter capitalised.
-     *
-     * @param variableName
-     * @return a String with the first letter in uppercase
-     */
-    private static String capitalizeFirstLetter(final String variableName) {
-        return variableName.substring(0, 1).toUpperCase() + variableName.substring(1);
-    }
 }
 
 

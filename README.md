@@ -1,6 +1,7 @@
 # protobuf-mapper
 
-Maps from Pojo to Protobuf generated class by calling: `ProtoMapper.createProtoMessageObject(Class.class, object);`
+Maps from Pojo to Protobuf generated class by calling: `ProtoMapper.createProto(Class.class, object);`
+
 The Ptotobuf generated class will have all the variables assigned to the values variables with the same name have in the domainObject.
 
 It should also work for non protobuf generated classes as long as they

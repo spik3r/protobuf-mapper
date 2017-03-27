@@ -1,4 +1,4 @@
-package com.kaitait.testFixtures.domain;
+package com.kaitait.testFixtures.domain.camelCase;
 
 /**
  * Created by kai-tait on 22/03/2017.

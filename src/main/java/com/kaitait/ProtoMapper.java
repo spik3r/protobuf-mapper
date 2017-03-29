@@ -1,12 +1,11 @@
 package com.kaitait;
 
-import com.kaitait.matchers.FieldNameMatchesPredicate;
-import com.kaitait.matchers.MethodNameMatchesPredicate;
+import com.kaitait.matchers.alternativeMatchers.FieldNameMatcher;
+import com.kaitait.matchers.alternativeMatchers.MethodNameMatcher;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.function.Predicate;
 
 import static com.kaitait.StringHelpers.getSetterFor;
 import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
@@ -26,9 +25,10 @@ public class ProtoMapper {
             throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
 
         Object builderInstance = createProtoMessageBuilder(clazz, domainObject);
-        Method buildMethod = ProtoMapper.arraySearch(
+
+        Method buildMethod = ProtoMapper.methodSearch(
                 builderInstance.getClass().getDeclaredMethods(),
-                new MethodNameMatchesPredicate("build"));
+                 "build");
         return buildMethod.invoke(builderInstance, null);
     }
 
@@ -84,9 +84,9 @@ public class ProtoMapper {
             Object builderInstance, Field field)
             throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
 
-        final Field innerField = ProtoMapper.arraySearch(
+        final Field innerField = ProtoMapper.fieldSearch(
                 clazz.getDeclaredFields(),
-                new FieldNameMatchesPredicate(field.getName() + "_"));
+                field.getName() + "_");
 
         final Object nestedMessage = createProto(
                 innerField.getType(),
@@ -119,30 +119,42 @@ public class ProtoMapper {
     }
 
     private static Method findByName(Method[] methods, String methodName) {
-        return ProtoMapper.arraySearch(
+        return ProtoMapper.methodSearch(
                 methods,
-                new MethodNameMatchesPredicate(methodName)
-        );
+                methodName);
     }
 
     /**
-     * Helper method to search an array and return the value if it's found.
-     *
-     * @param array     the array to search
-     * @param predicate the matcher either method or field
-     * @param <T>       the type
-     * @return the value if it's found in the array
+     * Helper method to search an array of Fields return the field if it's found.
+     * @param fields an array of Fields
+     * @param field the field to search for
+     * @return the field if found
      */
-    private static <T> T arraySearch(final T[] array, final Predicate<T> predicate) {
-        for (T value : array) {
-            if (predicate.test(value)) {
+    private static Field fieldSearch(final Field[] fields, final String field) {
+        for (Field value : fields) {
+            FieldNameMatcher matcher = new FieldNameMatcher(field);
+            if (matcher.test(value)) {
                 return value;
             }
         }
         return null;
     }
 
-
+    /**
+     * Helper method to search an array of Methods return the method if it's found.
+     * @param methods an array of Methods
+     * @param method the method to search for
+     * @return the method if found
+     */
+    private static Method methodSearch(final Method[] methods, final String method) {
+        for (Method value : methods) {
+            MethodNameMatcher matcher = new MethodNameMatcher(method);
+            if (matcher.test(value)) {
+                return value;
+            }
+        }
+        return null;
+    }
 }
 
 

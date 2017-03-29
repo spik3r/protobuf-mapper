@@ -1,22 +1,20 @@
-package com.kaitait.matchers;
+package com.kaitait.matchers.alternativeMatchers;
 
 import java.lang.reflect.Field;
 
-import java.util.function.Predicate;
 import static com.kaitait.StringHelpers.fromSnakeCase;
 
 /**
- * Unable to use due to android not supporting java 8
- * Created by kai-tait on 22/03/2017.
+ * Alternative matcher not using predicates
+ * Created by kai-tait on 29/03/2017.
  */
-public class FieldNameMatchesPredicate implements Predicate<Field> {
+public class FieldNameMatcher {
     public final String value;
 
-    public FieldNameMatchesPredicate(String value) {
+    public FieldNameMatcher(String value) {
         this.value = value;
     }
 
-    @Override
     public boolean test(Field field) {
         final String snakeCase = fromSnakeCase(value) + "_";
         //Check if the field name matches either as snake case or camel case

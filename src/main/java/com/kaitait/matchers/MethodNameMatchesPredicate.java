@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 import java.util.function.Predicate;
 
 /**
+ * Unable to use due to android not supporting java 8
  * Created by kai-tait on 22/03/2017.
  */
 public class MethodNameMatchesPredicate implements Predicate<Method> {

@@ -88,11 +88,13 @@ public class ProtoMapper {
                 clazz.getDeclaredFields(),
                 field.getName() + "_");
 
-        final Object nestedMessage = createProto(
-                innerField.getType(),
-                field.get(domainObject));
-
-        setValue(builderInstance, field.getName(), innerField.getType(), nestedMessage);
+        Class<?> innerFieldType = innerField.getType();
+        if (innerFieldType != null) {
+            final Object nestedMessage = createProto(
+                    innerFieldType,
+                    field.get(domainObject));
+            setValue(builderInstance, field.getName(), innerField.getType(), nestedMessage);
+        }
     }
 
     private static void setValue(Object builderInstance, String fieldName, Object value)

@@ -69,7 +69,8 @@ public class ProtoMapper {
             throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         for (Field field : domainObjectFields) {
             field.setAccessible(true);
-            if (isPrimitiveOrWrapper(field.getType()) || field.getType().equals(String.class)) {
+            Class<?> fieldType = field.getType();
+            if (isPrimitiveOrWrapper(fieldType) || fieldType.equals(String.class) || fieldType.getName().contains("android")) {
                 setValue(builderInstance, field.getName(), field.get(domainObject));
                 continue;
             }
@@ -88,13 +89,11 @@ public class ProtoMapper {
                 clazz.getDeclaredFields(),
                 field.getName() + "_");
 
-        Class<?> innerFieldType = innerField.getType();
-        if (innerFieldType != null) {
-            final Object nestedMessage = createProto(
-                    innerFieldType,
-                    field.get(domainObject));
-            setValue(builderInstance, field.getName(), innerField.getType(), nestedMessage);
-        }
+        final Object nestedMessage = createProto(
+                innerField.getType(),
+                field.get(domainObject));
+
+        setValue(builderInstance, field.getName(), innerField.getType(), nestedMessage);
     }
 
     private static void setValue(Object builderInstance, String fieldName, Object value)

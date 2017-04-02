@@ -55,7 +55,7 @@ public class ProtoMapperTest {
         //Given
         SnakeInnerObject domainInnerObject = new SnakeInnerObject(555666333222L, "snakes_are_awesome");
         SnakeDomainObject domainDomainObject
-                = new SnakeDomainObject("like python but not", domainInnerObject);
+                = new SnakeDomainObject("likee python but not", domainInnerObject);
 
         //When
         ProtoObject.Builder builder = (ProtoObject.Builder) ProtoMapper.createProtoMessageBuilder
@@ -64,7 +64,7 @@ public class ProtoMapperTest {
         ProtoObject requestMessage = builder.build();
 
         //Then
-        assertThat(requestMessage.getLabel(), is("like python but not"));
+        assertThat(requestMessage.getLabel(), is("likee python but not"));
         assertThat(requestMessage.getInnerObject().getObjectId(), is(555666333222L));
         assertThat(requestMessage.getInnerObject().getSerial(), is("snakes_are_awesome"));
     }
